@@ -30,16 +30,15 @@ import {
   showConfirm,
   showToast,
 } from "./ui-lib";
-import { ModelConfigList } from "./model-config";
 
 import { IconButton } from "./button";
 import {
-  SubmitKey,
   useChatStore,
-  Theme,
   useUpdateStore,
   useAccessStore,
   useAppConfig,
+  LLMProvider,
+  LLMProviders,
 } from "../store";
 
 import Locale, {
@@ -61,6 +60,8 @@ import { useSyncStore } from "../store/sync";
 import { nanoid } from "nanoid";
 import { useMaskStore } from "../store/mask";
 import { ProviderType } from "../utils/cloud";
+import { ModelConfigList, ProviderConfigList } from "./config";
+import { SubmitKey, Theme } from "../typing";
 
 function EditPromptModal(props: { id: string; onClose: () => void }) {
   const promptStore = usePromptStore();
@@ -757,8 +758,7 @@ export function Settings() {
               step="1"
               onChange={(e) =>
                 updateConfig(
-                  (config) =>
-                    (config.fontSize = Number.parseInt(e.currentTarget.value)),
+                  (config) => (config.fontSize = e.currentTarget.valueAsNumber),
                 )
               }
             ></InputRange>
@@ -770,11 +770,14 @@ export function Settings() {
           >
             <input
               type="checkbox"
-              checked={config.enableAutoGenerateTitle}
+              checked={
+                config.globalMaskConfig.chatConfig.enableAutoGenerateTitle
+              }
               onChange={(e) =>
                 updateConfig(
                   (config) =>
-                    (config.enableAutoGenerateTitle = e.currentTarget.checked),
+                    (config.globalMaskConfig.chatConfig.enableAutoGenerateTitle =
+                      e.currentTarget.checked),
                 )
               }
             ></input>
@@ -877,7 +880,9 @@ export function Settings() {
                 type="text"
                 placeholder={Locale.Settings.AccessCode.Placeholder}
                 onChange={(e) => {
-                  accessStore.updateCode(e.currentTarget.value);
+                  accessStore.update(
+                    (config) => (config.accessCode = e.currentTarget.value),
+                  );
                 }}
               />
             </ListItem>
@@ -885,36 +890,7 @@ export function Settings() {
             <></>
           )}
 
-          {!accessStore.hideUserApiKey ? (
-            <>
-              <ListItem
-                title={Locale.Settings.Endpoint.Title}
-                subTitle={Locale.Settings.Endpoint.SubTitle}
-              >
-                <input
-                  type="text"
-                  value={accessStore.openaiUrl}
-                  placeholder="https://api.openai.com/"
-                  onChange={(e) =>
-                    accessStore.updateOpenAiUrl(e.currentTarget.value)
-                  }
-                ></input>
-              </ListItem>
-              <ListItem
-                title={Locale.Settings.Token.Title}
-                subTitle={Locale.Settings.Token.SubTitle}
-              >
-                <PasswordInput
-                  value={accessStore.token}
-                  type="text"
-                  placeholder={Locale.Settings.Token.Placeholder}
-                  onChange={(e) => {
-                    accessStore.updateToken(e.currentTarget.value);
-                  }}
-                />
-              </ListItem>
-            </>
-          ) : null}
+          {!accessStore.hideUserApiKey ? <></> : null}
 
           {!accessStore.hideBalanceQuery ? (
             <ListItem
@@ -941,31 +917,44 @@ export function Settings() {
               )}
             </ListItem>
           ) : null}
-
-          <ListItem
-            title={Locale.Settings.CustomModel.Title}
-            subTitle={Locale.Settings.CustomModel.SubTitle}
-          >
-            <input
-              type="text"
-              value={config.customModels}
-              placeholder="model1,model2,model3"
-              onChange={(e) =>
-                config.update(
-                  (config) => (config.customModels = e.currentTarget.value),
-                )
-              }
-            ></input>
-          </ListItem>
         </List>
 
         <List>
+          <ListItem title="服务提供商" subTitle="切换不同的模型提供商">
+            <Select
+              value={config.globalMaskConfig.provider}
+              onChange={(e) => {
+                config.update(
+                  (config) =>
+                    (config.globalMaskConfig.provider = e.target
+                      .value as LLMProvider),
+                );
+              }}
+            >
+              {LLMProviders.map(([k, v]) => (
+                <option value={v} key={k}>
+                  {k}
+                </option>
+              ))}
+            </Select>
+          </ListItem>
+
+          <ProviderConfigList
+            provider={config.globalMaskConfig.provider}
+            config={config.providerConfig}
+            updateConfig={(update) => {
+              config.update((_config) => update(_config.providerConfig));
+            }}
+          />
           <ModelConfigList
-            modelConfig={config.modelConfig}
+            provider={config.globalMaskConfig.provider}
+            config={config.globalMaskConfig.modelConfig}
             updateConfig={(updater) => {
-              const modelConfig = { ...config.modelConfig };
+              const modelConfig = { ...config.globalMaskConfig.modelConfig };
               updater(modelConfig);
-              config.update((config) => (config.modelConfig = modelConfig));
+              config.update(
+                (config) => (config.globalMaskConfig.modelConfig = modelConfig),
+              );
             }}
           />
         </List>

@@ -1,7 +1,7 @@
 import { DEFAULT_API_HOST, DEFAULT_MODELS, StoreKey } from "../constant";
-import { getHeaders } from "../client/api";
 import { getClientConfig } from "../config/client";
 import { createPersistStore } from "../utils/store";
+import { getAuthHeaders } from "../client/common/auth";
 
 let fetchState = 0; // 0 not fetch, 1 fetching, 2 done
 
@@ -10,14 +10,11 @@ const DEFAULT_OPENAI_URL =
 console.log("[API] default openai url", DEFAULT_OPENAI_URL);
 
 const DEFAULT_ACCESS_STATE = {
-  token: "",
   accessCode: "",
   needCode: true,
   hideUserApiKey: false,
   hideBalanceQuery: false,
   disableGPT4: false,
-
-  openaiUrl: DEFAULT_OPENAI_URL,
 };
 
 export const useAccessStore = createPersistStore(
@@ -25,35 +22,24 @@ export const useAccessStore = createPersistStore(
 
   (set, get) => ({
     enabledAccessControl() {
-      this.fetch();
+      this.fetchConfig();
 
       return get().needCode;
     },
-    updateCode(code: string) {
-      set(() => ({ accessCode: code?.trim() }));
-    },
-    updateToken(token: string) {
-      set(() => ({ token: token?.trim() }));
-    },
-    updateOpenAiUrl(url: string) {
-      set(() => ({ openaiUrl: url?.trim() }));
-    },
     isAuthorized() {
-      this.fetch();
+      this.fetchConfig();
 
       // has token or has code or disabled access control
-      return (
-        !!get().token || !!get().accessCode || !this.enabledAccessControl()
-      );
+      return !!get().accessCode || !this.enabledAccessControl();
     },
-    fetch() {
+    fetchConfig() {
       if (fetchState > 0 || getClientConfig()?.buildMode === "export") return;
       fetchState = 1;
       fetch("/api/config", {
         method: "post",
         body: null,
         headers: {
-          ...getHeaders(),
+          ...getAuthHeaders(),
         },
       })
         .then((res) => res.json())

@@ -20,8 +20,12 @@ export enum Path {
   Auth = "/auth",
 }
 
+export const API_PREFIX = "/api";
+
 export enum ApiPath {
+  OpenAI = "/api/openai",
   Cors = "/api/cors",
+  Config = "/api/config",
 }
 
 export enum SlotID {
@@ -59,12 +63,12 @@ export const REQUEST_TIMEOUT_MS = 60000;
 
 export const EXPORT_MESSAGE_CLASS_NAME = "export-markdown";
 
-export const OpenaiPath = {
-  ChatPath: "v1/chat/completions",
-  UsagePath: "dashboard/billing/usage",
-  SubsPath: "dashboard/billing/subscription",
-  ListModelPath: "v1/models",
-};
+export enum OpenaiPath {
+  Chat = "v1/chat/completions",
+  Usage = "dashboard/billing/usage",
+  Subs = "dashboard/billing/subscription",
+  ListModel = "v1/models",
+}
 
 export const DEFAULT_INPUT_TEMPLATE = `{{input}}`; // input / time / model / lang
 export const DEFAULT_SYSTEM_TEMPLATE = `

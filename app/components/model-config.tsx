@@ -4,10 +4,12 @@ import Locale from "../locales";
 import { InputRange } from "./input-range";
 import { ListItem, Select } from "./ui-lib";
 
-export function ModelConfigList(props: {
+export function _ModelConfigList(props: {
   modelConfig: ModelConfig;
   updateConfig: (updater: (config: ModelConfig) => void) => void;
 }) {
+  return null;
+  /*
   const config = useAppConfig();
 
   return (
@@ -210,4 +212,5 @@ export function ModelConfigList(props: {
       </ListItem>
     </>
   );
+  */
 }
